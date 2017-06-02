@@ -24,12 +24,15 @@ namespace TextFlow {
         return chars.find( c ) != std::string::npos;
     }
 
+    class Columns;
+
     class Column {
         std::vector<std::string> m_strings;
         size_t m_width = 80;
         size_t m_indent = 0;
         size_t m_initialIndent = std::string::npos;
 
+    public:
         class Iterator {
             friend Column;
 
@@ -138,7 +141,6 @@ namespace TextFlow {
             }
         };
 
-    public:
         Column( std::string const& text ) { m_strings.push_back( text ); }
 
         auto width( size_t newWidth ) -> Column& {
@@ -155,6 +157,7 @@ namespace TextFlow {
             return *this;
         }
 
+        auto width() const -> size_t { return m_width; }
         auto begin() const -> Iterator { return Iterator( *this ); }
         auto end() const -> Iterator { return Iterator( *this, m_strings.size() ); }
 
@@ -170,12 +173,96 @@ namespace TextFlow {
             return os;
         }
 
+        auto operator + ( Column const& other ) -> Columns;
+
         auto toString() const -> std::string {
             std::ostringstream oss;
             oss << *this;
             return oss.str();
         }
     };
+
+    class Spacer : public Column {
+
+    public:
+        Spacer( size_t spaceWidth ) : Column( "" ) {
+            width( spaceWidth );
+        }
+    };
+
+    class Columns {
+        std::vector<Column> m_columns;
+
+        void streamInto( std::ostream& os ) const {
+            std::vector<Column::Iterator> iterators;
+            iterators.reserve( m_columns.size() );
+
+            for( auto const& col : m_columns )
+                iterators.push_back( col.begin() );
+
+            std::string row;
+            bool stillGoing = true;
+            bool first = true;
+            std::string padding;
+            while( stillGoing ) {
+                row = "";
+                padding = "";
+                stillGoing = false;
+                for( size_t i = 0; i < m_columns.size(); ++i ) {
+                    auto width = m_columns[i].width();
+                    if( iterators[i] != m_columns[i].end() ) {
+                        std::string col = *iterators[i];
+                        row += padding + col;
+                        if( col.size() < width )
+                            padding = std::string( width - col.size(), ' ' );
+                        else
+                            padding = "";
+                        stillGoing = true;
+                        ++iterators[i];
+                    }
+                    else {
+                        padding += std::string( width, ' ' );
+                    }
+                }
+                if( stillGoing ) {
+                    if (first)
+                        first = false;
+                    else
+                        os << "\n";
+                    os << row;
+                }
+            } // while
+        }
+
+    public:
+        auto operator += ( Column const& col ) -> Columns& {
+            m_columns.push_back( col );
+            return *this;
+        }
+        auto operator + ( Column const& col ) -> Columns {
+            Columns combined = *this;
+            combined += col;
+            return combined;
+        }
+
+        inline friend std::ostream& operator << ( std::ostream& os, Columns const& cols ) {
+            cols.streamInto( os );
+            return os;
+        }
+
+        auto toString() const -> std::string {
+            std::ostringstream oss;
+            oss << *this;
+            return oss.str();
+        }
+    };
+
+    auto Column::operator + ( Column const& other ) -> Columns {
+        Columns cols;
+        cols += *this;
+        cols += other;
+        return cols;
+    }
 }
 
 #endif // TEXTFLOW_HPP_INCLUDED

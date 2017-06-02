@@ -206,5 +206,16 @@ TEST_CASE( "indents" ) {
         REQUIRE(lines[2] == "        hidden base, have won their");
         REQUIRE(lines[3] == "        first victory against the evil" );
     }
+}
+
+TEST_CASE( "combined columns" ) {
+
+    auto a = Column( "This is a load of text that should go on the left" ).width(10);
+    auto b = Column( "Here's some more strings that should be formatted to the right. "
+                     "It's longer so there should be blanks on the left" ).width(12);
+
+    auto layout = a + Spacer(4) + b;
+
+    CHECK( layout.toString() == "" );
 
 }
