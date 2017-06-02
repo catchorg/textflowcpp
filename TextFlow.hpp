@@ -33,7 +33,7 @@ namespace TextFlow {
         size_t m_initialIndent = std::string::npos;
 
     public:
-        class Iterator {
+        class iterator {
             friend Column;
 
             Column const& m_column;
@@ -43,7 +43,7 @@ namespace TextFlow {
             size_t m_len;
             bool m_suffix = false;
 
-            Iterator( Column const& column, size_t stringIndex )
+            iterator( Column const& column, size_t stringIndex )
             :   m_column( column ),
                 m_stringIndex( stringIndex )
             {}
@@ -94,7 +94,7 @@ namespace TextFlow {
             }
 
         public:
-            Iterator( Column const& column ) : m_column( column ) {
+            iterator( Column const& column ) : m_column( column ) {
                 assert( m_column.m_width > m_column.m_indent );
                 assert( m_column.m_initialIndent == std::string::npos || m_column.m_width > m_column.m_initialIndent );
                 calcLength();
@@ -111,7 +111,7 @@ namespace TextFlow {
                     return addIndentAndSuffix(line().substr(m_pos));
             }
 
-            auto operator ++() -> Iterator& {
+            auto operator ++() -> iterator& {
                 m_pos += m_len;
                 while( m_pos < line().size() && isWhitespace( line()[m_pos] ) )
                     ++m_pos;
@@ -124,22 +124,23 @@ namespace TextFlow {
                     calcLength();
                 return *this;
             }
-            auto operator ++(int) -> Iterator {
-                Iterator prev( *this );
+            auto operator ++(int) -> iterator {
+                iterator prev( *this );
                 operator++();
                 return prev;
             }
 
-            auto operator ==( Iterator const& other ) const -> bool {
+            auto operator ==( iterator const& other ) const -> bool {
                 return
                     m_pos == other.m_pos &&
                     m_stringIndex == other.m_stringIndex &&
                     &m_column == &other.m_column;
             }
-            auto operator !=( Iterator const& other ) const -> bool {
+            auto operator !=( iterator const& other ) const -> bool {
                 return !operator==( other );
             }
         };
+        using const_iterator = iterator;
 
         Column( std::string const& text ) { m_strings.push_back( text ); }
 
@@ -158,8 +159,8 @@ namespace TextFlow {
         }
 
         auto width() const -> size_t { return m_width; }
-        auto begin() const -> Iterator { return Iterator( *this ); }
-        auto end() const -> Iterator { return Iterator( *this, m_strings.size() ); }
+        auto begin() const -> iterator { return iterator( *this ); }
+        auto end() const -> iterator { return iterator( *this, m_strings.size() ); }
 
         inline friend std::ostream& operator << ( std::ostream& os, Column const& col ) {
             bool first = true;
@@ -195,15 +196,15 @@ namespace TextFlow {
 
     public:
 
-        class Iterator {
+        class iterator {
             friend Columns;
             struct EndTag {};
 
             std::vector<Column> const& m_columns;
-            std::vector<Column::Iterator> m_iterators;
+            std::vector<Column::iterator> m_iterators;
             size_t m_activeIterators;
 
-            Iterator( Columns const& columns, EndTag )
+            iterator( Columns const& columns, EndTag )
             :   m_columns( columns.m_columns ),
                 m_activeIterators( 0 )
             {
@@ -214,7 +215,7 @@ namespace TextFlow {
             }
 
         public:
-            Iterator( Columns const& columns )
+            iterator( Columns const& columns )
             :   m_columns( columns.m_columns ),
                 m_activeIterators( m_columns.size() )
             {
@@ -224,10 +225,10 @@ namespace TextFlow {
                     m_iterators.push_back( col.begin() );
             }
 
-            auto operator ==( Iterator const& other ) const -> bool {
+            auto operator ==( iterator const& other ) const -> bool {
                 return m_iterators == other.m_iterators;
             }
-            auto operator !=( Iterator const& other ) const -> bool {
+            auto operator !=( iterator const& other ) const -> bool {
                 return m_iterators != other.m_iterators;
             }
             auto operator *() const -> std::string {
@@ -249,22 +250,23 @@ namespace TextFlow {
                 }
                 return row;
             }
-            auto operator ++() -> Iterator& {
+            auto operator ++() -> iterator& {
                 for( size_t i = 0; i < m_columns.size(); ++i ) {
                     if (m_iterators[i] != m_columns[i].end())
                         ++m_iterators[i];
                 }
                 return *this;
             }
-            auto operator ++(int) -> Iterator {
-                Iterator prev( *this );
+            auto operator ++(int) -> iterator {
+                iterator prev( *this );
                 operator++();
                 return prev;
             }
-
         };
-        auto begin() const -> Iterator { return Iterator( *this ); }
-        auto end() const -> Iterator { return Iterator( *this, Iterator::EndTag() ); }
+        using const_iterator = iterator;
+
+        auto begin() const -> iterator { return iterator( *this ); }
+        auto end() const -> iterator { return iterator( *this, iterator::EndTag() ); }
 
         auto operator += ( Column const& col ) -> Columns& {
             m_columns.push_back( col );
