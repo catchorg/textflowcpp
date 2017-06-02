@@ -49,4 +49,6 @@ gives you:
 
 Not bad!
 
+You can also iterate the lines (which are generated lazily), both from `Column` and the combined `Columns`.
+
 See the tests for more.
