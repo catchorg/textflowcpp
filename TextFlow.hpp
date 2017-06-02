@@ -27,6 +27,8 @@ namespace TextFlow {
     class Column {
         std::vector<std::string> m_strings;
         size_t m_width = 80;
+        size_t m_indent = 0;
+        size_t m_initialIndent = std::string::npos;
 
         class Iterator {
             friend Column;
@@ -59,7 +61,7 @@ namespace TextFlow {
                 assert( m_stringIndex < m_column.m_strings.size() );
 
                 m_suffix = false;
-                auto width = m_column.m_width;
+                auto width = m_column.m_width-indent();
                 if( line().size() < m_pos + width ) {
                     m_len = line().size() - m_pos;
                 }
@@ -79,12 +81,19 @@ namespace TextFlow {
                 }
             }
 
-            auto addSuffix(std::string const &unsuffixed) const -> std::string {
-                return m_suffix ? unsuffixed + "-" : unsuffixed;
+            auto indent() const -> size_t {
+                auto initial = m_pos == 0 && m_stringIndex == 0 ? m_column.m_initialIndent : std::string::npos;
+                return initial == std::string::npos ? m_column.m_indent : initial;
+            }
+
+            auto addIndentAndSuffix(std::string const &plain) const -> std::string {
+                return std::string( indent(), ' ' ) + (m_suffix ? plain + "-" : plain);
             }
 
         public:
             Iterator( Column const& column ) : m_column( column ) {
+                assert( m_column.m_width > m_column.m_indent );
+                assert( m_column.m_initialIndent == std::string::npos || m_column.m_width > m_column.m_initialIndent );
                 calcLength();
                 if( m_len == 0 )
                     m_stringIndex++; // Empty string
@@ -94,9 +103,9 @@ namespace TextFlow {
                 assert( m_stringIndex < m_column.m_strings.size() );
                 assert( m_pos < line().size() );
                 if( m_pos + m_column.m_width < line().size() )
-                    return addSuffix( line().substr(m_pos, m_len) );
+                    return addIndentAndSuffix(line().substr(m_pos, m_len));
                 else
-                    return addSuffix( line().substr(m_pos) );
+                    return addIndentAndSuffix(line().substr(m_pos));
             }
 
             auto operator ++() -> Iterator& {
@@ -135,6 +144,14 @@ namespace TextFlow {
         auto width( size_t newWidth ) -> Column& {
             assert( newWidth > 0 );
             m_width = newWidth;
+            return *this;
+        }
+        auto indent( size_t newIndent ) -> Column& {
+            m_indent = newIndent;
+            return *this;
+        }
+        auto initialIndent( size_t newIndent ) -> Column& {
+            m_initialIndent = newIndent;
             return *this;
         }
 

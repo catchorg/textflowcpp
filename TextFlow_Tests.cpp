@@ -98,7 +98,13 @@ TEST_CASE( "edge cases" ) {
     SECTION( "long string with trailing space" )
         CHECK( Column("once upon a time ").width(10).toString() == "once upon\na time " );
 
-// can't check this as it's an assert, currently
+// can't check these as they assert, currently
+
+//    SECTION( "indent > width" )
+//        CHECK_THROWS( Column("test").width(10).indent(10).toString() );
+//    SECTION( "initialIndent > width" )
+//        CHECK_THROWS( Column("test").width(10).initialIndent(10).toString() );
+
 //    SECTION( "zero width" )
 //        CHECK_THROWS( Column("hello").width(0).toString() );
 }
@@ -135,4 +141,70 @@ TEST_CASE( "wrap points" ) {
             CHECK( col.width(4).toString() == "one,\ntwo\n(th-\nree)\n<he-\nre>");
         }
     }
+}
+
+auto toVector ( Column const& col ) -> std::vector<std::string> {
+    std::vector<std::string> lines;
+    std::copy( col.begin(), col.end(), std::back_inserter( lines ) );
+    return lines;
+}
+
+TEST_CASE( "indents" ) {
+    auto col = Column(
+            "It is a period of civil war. "
+            "Rebel spaceships, striking from a hidden base, have won their first victory against the evil Galactic Empire. "
+            "During the battle, Rebel spies managed to steal secret plans to the Empire’s ultimate weapon, the DEATH STAR, an armored space station with enough power to destroy an entire planet. \n"
+            "Pursued by the Empire’s sinister agents, Princess Leia races home aboard her starship, custodian of the stolen plans that can save her people and restore freedom to the galaxy..."
+        ).width(40);
+
+    SECTION( "no indent" ) {
+        auto lines = toVector(col);
+
+        REQUIRE(lines[0] == "It is a period of civil war. Rebel");
+        REQUIRE(lines[1] == "spaceships, striking from a hidden base,");
+        REQUIRE(lines[2] == "have won their first victory against the");
+        REQUIRE(lines[3] == "evil Galactic Empire. During the battle,");
+    }
+
+    SECTION( "indent only" ) {
+        col.indent( 4 );
+        auto lines = toVector(col);
+
+        //                   0123456789012345678901234567890123456789
+        REQUIRE(lines[0] == "    It is a period of civil war. Rebel");
+        REQUIRE(lines[1] == "    spaceships, striking from a hidden");
+        REQUIRE(lines[2] == "    base, have won their first victory");
+        REQUIRE(lines[3] == "    against the evil Galactic Empire." );
+    }
+    SECTION( "initial indent only" ) {
+        col.initialIndent( 8 );
+        auto lines = toVector(col);
+
+        //                   0123456789012345678901234567890123456789
+        REQUIRE(lines[0] == "        It is a period of civil war.");
+        REQUIRE(lines[1] == "Rebel spaceships, striking from a hidden");
+        REQUIRE(lines[2] == "base, have won their first victory");
+        REQUIRE(lines[3] == "against the evil Galactic Empire. During" );
+    }
+    SECTION( "initial indent > indent" ) {
+        col.initialIndent( 8 ).indent( 4 );
+        auto lines = toVector(col);
+
+        //                   0123456789012345678901234567890123456789
+        REQUIRE(lines[0] == "        It is a period of civil war.");
+        REQUIRE(lines[1] == "    Rebel spaceships, striking from a");
+        REQUIRE(lines[2] == "    hidden base, have won their first");
+        REQUIRE(lines[3] == "    victory against the evil Galactic" );
+    }
+    SECTION( "initial indent < indent" ) {
+        col.initialIndent( 4 ).indent( 8 );
+        auto lines = toVector(col);
+
+        //                   0123456789012345678901234567890123456789
+        REQUIRE(lines[0] == "    It is a period of civil war. Rebel");
+        REQUIRE(lines[1] == "        spaceships, striking from a");
+        REQUIRE(lines[2] == "        hidden base, have won their");
+        REQUIRE(lines[3] == "        first victory against the evil" );
+    }
+
 }
