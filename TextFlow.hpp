@@ -130,13 +130,13 @@ namespace TextFlow {
                 return prev;
             }
 
-            auto operator ==( Iterator const& other ) -> bool {
+            auto operator ==( Iterator const& other ) const -> bool {
                 return
                     m_pos == other.m_pos &&
                     m_stringIndex == other.m_stringIndex &&
                     &m_column == &other.m_column;
             }
-            auto operator !=( Iterator const& other ) -> bool {
+            auto operator !=( Iterator const& other ) const -> bool {
                 return !operator==( other );
             }
         };
@@ -193,48 +193,79 @@ namespace TextFlow {
     class Columns {
         std::vector<Column> m_columns;
 
-        void streamInto( std::ostream& os ) const {
-            std::vector<Column::Iterator> iterators;
-            iterators.reserve( m_columns.size() );
+    public:
 
-            for( auto const& col : m_columns )
-                iterators.push_back( col.begin() );
+        class Iterator {
+            friend Columns;
+            struct EndTag {};
 
-            std::string row;
-            bool stillGoing = true;
-            bool first = true;
-            std::string padding;
-            while( stillGoing ) {
-                row = "";
-                padding = "";
-                stillGoing = false;
+            std::vector<Column> const& m_columns;
+            std::vector<Column::Iterator> m_iterators;
+            size_t m_activeIterators;
+
+            Iterator( Columns const& columns, EndTag )
+            :   m_columns( columns.m_columns ),
+                m_activeIterators( 0 )
+            {
+                m_iterators.reserve( m_columns.size() );
+
+                for( auto const& col : m_columns )
+                    m_iterators.push_back( col.end() );
+            }
+
+        public:
+            Iterator( Columns const& columns )
+            :   m_columns( columns.m_columns ),
+                m_activeIterators( m_columns.size() )
+            {
+                m_iterators.reserve( m_columns.size() );
+
+                for( auto const& col : m_columns )
+                    m_iterators.push_back( col.begin() );
+            }
+
+            auto operator ==( Iterator const& other ) const -> bool {
+                return m_iterators == other.m_iterators;
+            }
+            auto operator !=( Iterator const& other ) const -> bool {
+                return m_iterators != other.m_iterators;
+            }
+            auto operator *() const -> std::string {
+                std::string row, padding;
+
                 for( size_t i = 0; i < m_columns.size(); ++i ) {
                     auto width = m_columns[i].width();
-                    if( iterators[i] != m_columns[i].end() ) {
-                        std::string col = *iterators[i];
+                    if( m_iterators[i] != m_columns[i].end() ) {
+                        std::string col = *m_iterators[i];
                         row += padding + col;
                         if( col.size() < width )
                             padding = std::string( width - col.size(), ' ' );
                         else
                             padding = "";
-                        stillGoing = true;
-                        ++iterators[i];
                     }
                     else {
                         padding += std::string( width, ' ' );
                     }
                 }
-                if( stillGoing ) {
-                    if (first)
-                        first = false;
-                    else
-                        os << "\n";
-                    os << row;
+                return row;
+            }
+            auto operator ++() -> Iterator& {
+                for( size_t i = 0; i < m_columns.size(); ++i ) {
+                    if (m_iterators[i] != m_columns[i].end())
+                        ++m_iterators[i];
                 }
-            } // while
-        }
+                return *this;
+            }
+            auto operator ++(int) -> Iterator {
+                Iterator prev( *this );
+                operator++();
+                return prev;
+            }
 
-    public:
+        };
+        auto begin() const -> Iterator { return Iterator( *this ); }
+        auto end() const -> Iterator { return Iterator( *this, Iterator::EndTag() ); }
+
         auto operator += ( Column const& col ) -> Columns& {
             m_columns.push_back( col );
             return *this;
@@ -246,7 +277,15 @@ namespace TextFlow {
         }
 
         inline friend std::ostream& operator << ( std::ostream& os, Columns const& cols ) {
-            cols.streamInto( os );
+
+            bool first = true;
+            for( auto line : cols ) {
+                if( first )
+                    first = false;
+                else
+                    os << "\n";
+                os << line;
+            }
             return os;
         }
 

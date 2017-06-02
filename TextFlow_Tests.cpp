@@ -148,6 +148,11 @@ auto toVector ( Column const& col ) -> std::vector<std::string> {
     std::copy( col.begin(), col.end(), std::back_inserter( lines ) );
     return lines;
 }
+auto toVector ( Columns const& cols ) -> std::vector<std::string> {
+    std::vector<std::string> lines;
+    std::copy( cols.begin(), cols.end(), std::back_inserter( lines ) );
+    return lines;
+}
 
 TEST_CASE( "indents" ) {
     auto col = Column(
@@ -216,6 +221,23 @@ TEST_CASE( "combined columns" ) {
 
     auto layout = a + Spacer(4) + b;
 
-    CHECK( layout.toString() == "" );
+
+    auto lines = toVector( layout );
+    CHECK( lines[0] == "This is a     Here's some" );
+    CHECK( lines[1] == "load of       more strings" );
+    CHECK( lines[2] == "text that     that should" );
+    CHECK( lines[6] == "              longer so" );
+
+    CHECK( layout.toString() ==
+           "This is a     Here's some\n"
+           "load of       more strings\n"
+           "text that     that should\n"
+           "should go     be formatted\n"
+           "on the        to the\n"
+           "left          right. It's\n"
+           "              longer so\n"
+           "              there should\n"
+           "              be blanks on\n"
+           "              the left" );
 
 }
