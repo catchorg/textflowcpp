@@ -1,4 +1,4 @@
-A simple way to wrap a string a different line lengths, optionally with indents.
+A simple way to wrap a string at different line lengths, optionally with indents.
 
 e.g.
 
@@ -19,14 +19,14 @@ Columns can be combined, too:
 
 ```c++
 auto a = Column( "This is a load of text that should go on the left" )
-            .width(10);
+            .width( 10 );
 auto b = Column( "Here's some more strings that should be formatted to the right. "
                  "It's longer so there should be blanks on the left" )
-            .width(12)
+            .width( 12 )
             .initialIndent( 2 );
             
                  
-auto layout = a + Spacer(4) + b;
+auto layout = a + Spacer( 4 ) + b;
 
 std::cout << layout << std::endl;                 
 ```
