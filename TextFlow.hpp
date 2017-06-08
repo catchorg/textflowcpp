@@ -298,7 +298,7 @@ namespace TextFlow {
         }
     };
 
-    auto Column::operator + ( Column const& other ) -> Columns {
+    inline auto Column::operator + ( Column const& other ) -> Columns {
         Columns cols;
         cols += *this;
         cols += other;
