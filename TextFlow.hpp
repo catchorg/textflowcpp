@@ -1,6 +1,12 @@
+// TextFlowCpp
 //
-// Created by Phil Nash on 02/06/2017.
+// A single-header library for wrapping and laying out basic text, by Phil Nash
 //
+// This work is licensed under the BSD 2-Clause license.
+// See the accompanying LICENSE file, or the one at https://opensource.org/licenses/BSD-2-Clause
+//
+// This project is hosted at https://github.com/philsquared/textflowcpp
+
 #include <cassert>
 #include <ostream>
 #include <sstream>
