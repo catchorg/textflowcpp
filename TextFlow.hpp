@@ -46,7 +46,7 @@ namespace TextFlow {
             size_t m_stringIndex = 0;
             size_t m_pos = 0;
 
-            size_t m_len;
+            size_t m_len = 0;
             bool m_suffix = false;
 
             iterator( Column const& column, size_t stringIndex )
@@ -100,7 +100,7 @@ namespace TextFlow {
             }
 
         public:
-            iterator( Column const& column ) : m_column( column ) {
+            explicit iterator( Column const& column ) : m_column( column ) {
                 assert( m_column.m_width > m_column.m_indent );
                 assert( m_column.m_initialIndent == std::string::npos || m_column.m_width > m_column.m_initialIndent );
                 calcLength();
@@ -148,7 +148,7 @@ namespace TextFlow {
         };
         using const_iterator = iterator;
 
-        Column( std::string const& text ) { m_strings.push_back( text ); }
+        explicit Column( std::string const& text ) { m_strings.push_back( text ); }
 
         auto width( size_t newWidth ) -> Column& {
             assert( newWidth > 0 );
@@ -166,7 +166,7 @@ namespace TextFlow {
 
         auto width() const -> size_t { return m_width; }
         auto begin() const -> iterator { return iterator( *this ); }
-        auto end() const -> iterator { return iterator( *this, m_strings.size() ); }
+        auto end() const -> iterator { return { *this, m_strings.size() }; }
 
         inline friend std::ostream& operator << ( std::ostream& os, Column const& col ) {
             bool first = true;
@@ -192,7 +192,7 @@ namespace TextFlow {
     class Spacer : public Column {
 
     public:
-        Spacer( size_t spaceWidth ) : Column( "" ) {
+        explicit Spacer( size_t spaceWidth ) : Column( "" ) {
             width( spaceWidth );
         }
     };
@@ -221,7 +221,7 @@ namespace TextFlow {
             }
 
         public:
-            iterator( Columns const& columns )
+            explicit iterator( Columns const& columns )
             :   m_columns( columns.m_columns ),
                 m_activeIterators( m_columns.size() )
             {
@@ -272,7 +272,7 @@ namespace TextFlow {
         using const_iterator = iterator;
 
         auto begin() const -> iterator { return iterator( *this ); }
-        auto end() const -> iterator { return iterator( *this, iterator::EndTag() ); }
+        auto end() const -> iterator { return { *this, iterator::EndTag() }; }
 
         auto operator += ( Column const& col ) -> Columns& {
             m_columns.push_back( col );
