@@ -115,9 +115,10 @@ TEST_CASE( "unbreakable" ) {
 }
 
 TEST_CASE( "wrap points" ) {
-    auto col = Column( "(hello)aaa(world)" );
 
     SECTION( "round brackets" ) {
+        auto col = Column( "(hello)aaa(world)" );
+
         SECTION("8")
             CHECK(col.width(8).toString() == "(hello)\naaa\n(world)");
         SECTION("10")
