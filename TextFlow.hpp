@@ -7,13 +7,18 @@
 //
 // This project is hosted at https://github.com/philsquared/textflowcpp
 
+#ifndef TEXTFLOW_HPP_INCLUDED
+#define TEXTFLOW_HPP_INCLUDED
+
 #include <cassert>
 #include <ostream>
 #include <sstream>
 #include <vector>
 
-#ifndef TEXTFLOW_HPP_INCLUDED
-#define TEXTFLOW_HPP_INCLUDED
+#ifndef TEXTFLOW_CONFIG_CONSOLE_WIDTH
+#define TEXTFLOW_CONFIG_CONSOLE_WIDTH 80
+#endif
+
 
 namespace TextFlow {
 
@@ -34,7 +39,7 @@ namespace TextFlow {
 
     class Column {
         std::vector<std::string> m_strings;
-        size_t m_width = 80;
+        size_t m_width = TEXTFLOW_CONFIG_CONSOLE_WIDTH;
         size_t m_indent = 0;
         size_t m_initialIndent = std::string::npos;
 
