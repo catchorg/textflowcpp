@@ -244,13 +244,13 @@ TEST_CASE( "combined columns" ) {
 }
 
 TEST_CASE( "indent at existing newlines" ) {
-    auto col = Column( "This text has\nnewlines\nembedded in it - but also some long text that should be wrapped" )
+    auto col = Column( "This text has\n  newlines\nembedded in it - but also some long text that should be wrapped" )
         .width(20)
         .indent(2);
 
     REQUIRE( col.toString() ==
             "  This text has\n"
-            "  newlines\n"
+            "    newlines\n"
             "  embedded in it -\n"
             "  but also some long\n"
             "  text that should\n"
