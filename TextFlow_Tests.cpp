@@ -1,3 +1,4 @@
+#include <random>
 #include "TextFlow.hpp"
 
 #include "catch.hpp"
@@ -255,4 +256,70 @@ TEST_CASE( "indent at existing newlines" ) {
             "  but also some long\n"
             "  text that should\n"
             "  be wrapped" );
+}
+
+std::mt19937 rng;
+std::uniform_int_distribution<std::mt19937::result_type> wordCharGenerator(33,126);
+std::uniform_int_distribution<std::mt19937::result_type> wsGenerator(0, 11);
+std::uniform_int_distribution<std::mt19937::result_type> wordLenGenerator(1, 10);
+std::uniform_int_distribution<std::mt19937::result_type> wsLenGenerator(1, 2);
+std::uniform_int_distribution<std::mt19937::result_type> punctGenerator(0, 40);
+
+auto randomWordChar() -> char {
+    return static_cast<char>( wordCharGenerator(rng) );
+}
+auto randomWS() -> char {
+    static char const* ws = "         \t\r\n";
+    return ( ws[wsGenerator(rng)] );
+}
+auto generateWord( int length ) -> std::string {
+    std::string s;
+    for(; length > 0; --length )
+        s += randomWordChar();
+    return s;
+}
+auto generateWord() -> std::string {
+    return generateWord( wordLenGenerator(rng) );
+}
+auto generateWS( int length ) -> std::string {
+    std::string s;
+    for(; length > 0; --length )
+        s += randomWS();
+    return s;
+}
+auto generateText( int words ) -> std::string {
+    std::string text;
+    for(; words > 0; --words ) {
+        text += generateWord();
+        switch( punctGenerator(rng) )
+        {
+            case 1:
+            case 2:
+                text += ",";
+                break;
+            case 3:
+            case 4:
+                text += ".";
+                break;
+        }
+        text += generateWS( wsLenGenerator(rng) );
+    }
+    return text;
+}
+
+TEST_CASE( "randomly generated text" ) {
+    for( int j = 0; j < 5; ++j ) {
+        for(int i = 1; i < 200; ++i ) {
+            auto s = generateText( i );
+            auto size = s.size();
+            for( int c = 3; c < s.size(); ++c ) {
+                CAPTURE( j );
+                CAPTURE( i );
+                CAPTURE( c );
+                CAPTURE( s );
+                INFO( Column( s ).width(c).toString() );
+            }
+        }
+    }
+    SUCCEED();
 }
