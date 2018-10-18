@@ -258,6 +258,27 @@ TEST_CASE( "indent at existing newlines" ) {
             "  be wrapped" );
 }
 
+TEST_CASE( "another long string" ) {
+    // This test is taken from @JoeyGrajciar's PR against the Clara repo:
+
+    // https://github.com/catchorg/Clara/pull/74
+
+    const auto long_string = std::string(
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque nisl \n"
+        "massa, luctus ut ligula vitae, suscipit tempus velit. Vivamus sodales, quam in \n"
+        "convallis posuere, libero nisi ultricies orci, nec lobortis.\n");
+
+    auto col = Column( long_string )
+        .width(79)
+        .indent(2);
+
+    REQUIRE( col.toString() ==
+        "  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque nisl \n"
+        "  massa, luctus ut ligula vitae, suscipit tempus velit. Vivamus sodales, quam\n"
+        "  in \n"
+        "  convallis posuere, libero nisi ultricies orci, nec lobortis." );
+}
+
 std::mt19937 rng;
 std::uniform_int_distribution<std::mt19937::result_type> wordCharGenerator(33,126);
 std::uniform_int_distribution<std::mt19937::result_type> wsGenerator(0, 11);
@@ -307,7 +328,7 @@ auto generateText( int words ) -> std::string {
     return text;
 }
 
-TEST_CASE( "randomly generated text" ) {
+TEST_CASE( "randomly generated text", "[.]" ) {
     for( int j = 0; j < 5; ++j ) {
         for(int i = 1; i < 200; ++i ) {
             auto s = generateText( i );
