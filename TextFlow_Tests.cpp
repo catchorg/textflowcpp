@@ -279,6 +279,22 @@ TEST_CASE( "another long string" ) {
         "  convallis posuere, libero nisi ultricies orci, nec lobortis." );
 }
 
+TEST_CASE( "message with linebreak at start" )
+{
+    const auto message = std::string(
+        "\nthis is a message starting with linebreak"
+    );
+
+    auto col = Column( message )
+        .width(79)
+        .indent(2);
+
+    REQUIRE(col.toString() ==
+        "  \n"
+        "this is a message starting with linebreak"
+    );
+}
+
 std::mt19937 rng;
 std::uniform_int_distribution<std::mt19937::result_type> wordCharGenerator(33,126);
 std::uniform_int_distribution<std::mt19937::result_type> wsGenerator(0, 11);
