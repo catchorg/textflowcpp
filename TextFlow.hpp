@@ -78,6 +78,8 @@ namespace TextFlow {
                 m_suffix = false;
                 auto width = m_column.m_width-indent();
                 m_end = m_pos;
+                if(!line().empty() && line()[m_pos] == '\n')
+                    ++m_end;
                 while( m_end < line().size() && line()[m_end] != '\n' )
                     ++m_end;
 
